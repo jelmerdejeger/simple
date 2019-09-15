@@ -5,12 +5,30 @@ services:
 
 language: python
 
+before_install:
+  - curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.7.0/bin/linux/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
+  - curl -Lo skaffold https://storage.googleapis.com/skaffold/releases/latest/skaffold-linux-amd64 && chmod +x skaffold && sudo mv skaffold /usr/local/bin/
+
 jobs:
   include:
     - stage: "pushing image"
       name: "Pushing image to DockerHub"
       script:
         - sh .travis/deploy_dockerhub.sh
+
+after_success:
+  - echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+  - mkdir ${HOME}/.kube
+  - cp ./k8s/config.yaml ${HOME}/.kube/config
+  - cd ${HOME}/.kube
+  - sed -i 's/KUBE_CLUSTER_NAME/'"$KUBE_CLUSTER_NAME"'/g' config
+  - sed -i 's/KUBE_CLUSTER_CERTIFICATE/'"$KUBE_CLUSTER_CERTIFICATE"'/g' config
+  - sed -i 's/KUBE_CLIENT_CERTIFICATE/'"$KUBE_CLIENT_CERTIFICATE"'/g' config
+  - sed -i 's/KUBE_CLIENT_KEY/'"$KUBE_CLIENT_KEY"'/g' config
+  - sed -i 's/KUBE_ADMIN_PWD/'"$KUBE_ADMIN_PWD"'/g' config
+  - kubectl config use-context $KUBE_CLUSTER_NAME
+  - cd $TRAVIS_BUILD_DIR
+  - skaffold run
 
 notifications:
   slack: cicd-corp:$SLACK_CORP_KEY
