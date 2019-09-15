@@ -6,4 +6,4 @@ else
     TAG="$TRAVIS_BRANCH"
 fi
 docker build -f Dockerfile -t twodayfly/simpleapp:$TAG .
-docker push twodayfly/cicd:$TAG
+docker push twodayfly/simpleapp:$TAG
