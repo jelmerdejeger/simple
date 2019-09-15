@@ -1,0 +1,17 @@
+sudo: required
+
+services:
+  - docker
+
+language: python
+
+jobs:
+  include:
+    - stage: "pushing image"
+      name: "Pushing image to DockerHub"
+      script:
+        - sh .travis/deploy_dockerhub.sh
+    - stage: "pushing image"
+
+notifications:
+  slack: cicd-corp:$SLACK_CORP_KEY
